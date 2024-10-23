@@ -1,7 +1,5 @@
-// src/components/ViewInvoices.js
-
 import React, { useEffect, useState } from 'react';
-import { API, graphqlOperation } from 'aws-amplify';
+import { generateClient } from 'aws-amplify/api';
 import { listInvoices } from '../graphql/queries';
 import './ViewInvoices.css';
 import { Bar } from 'react-chartjs-2';
@@ -14,6 +12,8 @@ const ViewInvoices = () => {
     const [vendors, setVendors] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState('');
     const [selectedVendor, setSelectedVendor] = useState('');
+    
+    const client = generateClient();
 
     useEffect(() => {
         fetchInvoices();
@@ -21,7 +21,9 @@ const ViewInvoices = () => {
 
     const fetchInvoices = async () => {
         try {
-            const invoiceData = await API.graphql(graphqlOperation(listInvoices));
+            const invoiceData = await client.graphql({
+                query: listInvoices
+            });
             const invoicesList = invoiceData.data.listInvoices.items;
             setInvoices(invoicesList);
             setFilteredInvoices(invoicesList);
