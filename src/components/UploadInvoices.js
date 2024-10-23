@@ -1,7 +1,5 @@
-// src/components/UploadInvoices.js
-
 import React, { useState } from 'react';
-import { Storage } from '@aws-amplify/storage';
+import { uploadData } from 'aws-amplify/storage';
 import './UploadInvoices.css';
 
 const UploadInvoices = () => {
@@ -31,16 +29,26 @@ const UploadInvoices = () => {
             // Subir archivos PDF
             const uploadPromises = pdfFiles.map(file => {
                 const filename = `invoices/${Date.now()}_${file.name}`;
-                return Storage.put(filename, file, {
-                    contentType: file.type
-                });
+                return uploadData({
+                    key: filename,
+                    data: file,
+                    options: {
+                        contentType: file.type
+                    }
+                }).result;
             });
 
             // Subir imagen del menú
             const menuFilename = `menus/${Date.now()}_${imageFile.name}`;
-            uploadPromises.push(Storage.put(menuFilename, imageFile, {
-                contentType: imageFile.type
-            }));
+            uploadPromises.push(
+                uploadData({
+                    key: menuFilename,
+                    data: imageFile,
+                    options: {
+                        contentType: imageFile.type
+                    }
+                }).result
+            );
 
             await Promise.all(uploadPromises);
 
