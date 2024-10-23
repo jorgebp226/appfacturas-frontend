@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { generateClient } from 'aws-amplify/api';
 import { listInvoices } from '../graphql/queries';
-import './ViewInvoices.css';
-import { Bar } from 'react-chartjs-2';
-import 'chart.js/auto';
+import { Bar } from 'recharts';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const ViewInvoices = () => {
     const [invoices, setInvoices] = useState([]);
@@ -12,6 +14,8 @@ const ViewInvoices = () => {
     const [vendors, setVendors] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState('');
     const [selectedVendor, setSelectedVendor] = useState('');
+    const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(true);
     
     const client = generateClient();
 
@@ -21,31 +25,42 @@ const ViewInvoices = () => {
 
     const fetchInvoices = async () => {
         try {
+            setLoading(true);
             const invoiceData = await client.graphql({
-                query: listInvoices
+                query: listInvoices,
+                authMode: 'AMAZON_COGNITO_USER_POOLS'
             });
-            const invoicesList = invoiceData.data.listInvoices.items;
+            
+            const invoicesList = invoiceData.data.listInvoices.items.filter(item => !item._deleted);
             setInvoices(invoicesList);
             setFilteredInvoices(invoicesList);
 
+            // Extraer categorías y vendors únicos
             const uniqueCategories = [...new Set(invoicesList.map(inv => inv.category))];
-            setCategories(uniqueCategories);
-
             const uniqueVendors = [...new Set(invoicesList.map(inv => inv.vendor))];
+            
+            setCategories(uniqueCategories);
             setVendors(uniqueVendors);
+            
         } catch (error) {
             console.error('Error fetching invoices:', error);
+            setError('Error al cargar las facturas. Por favor, intente de nuevo más tarde.');
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleFilter = () => {
         let filtered = invoices;
+        
         if (selectedCategory) {
             filtered = filtered.filter(inv => inv.category === selectedCategory);
         }
+        
         if (selectedVendor) {
             filtered = filtered.filter(inv => inv.vendor === selectedVendor);
         }
+        
         setFilteredInvoices(filtered);
     };
 
@@ -56,79 +71,114 @@ const ViewInvoices = () => {
     };
 
     // Preparar datos para el gráfico
-    const chartData = {
-        labels: categories,
-        datasets: [
-            {
-                label: 'Gastos por Categoría',
-                data: categories.map(cat => {
-                    return invoices.filter(inv => inv.category === cat).reduce((acc, curr) => acc + curr.totalPrice, 0);
-                }),
-                backgroundColor: 'rgba(75,192,192,0.6)',
-            }
-        ]
-    };
+    const chartData = categories.map(cat => ({
+        category: cat,
+        total: filteredInvoices
+            .filter(inv => inv.category === cat)
+            .reduce((acc, curr) => acc + curr.totalPrice, 0)
+    }));
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+            </Alert>
+        );
+    }
 
     return (
-        <div className="view-container">
-            <h2>Visualizar Facturas</h2>
-            <div className="filters">
-                <div className="filter">
-                    <label>Filtrar por Categoría:</label>
-                    <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
-                        <option value="">Todas</option>
-                        {categories.map(cat => (
-                            <option key={cat} value={cat}>{cat}</option>
-                        ))}
-                    </select>
-                </div>
-                <div className="filter">
-                    <label>Filtrar por Proveedor:</label>
-                    <select value={selectedVendor} onChange={(e) => setSelectedVendor(e.target.value)}>
-                        <option value="">Todos</option>
-                        {vendors.map(vendor => (
-                            <option key={vendor} value={vendor}>{vendor}</option>
-                        ))}
-                    </select>
-                </div>
-                <div className="filter-buttons">
-                    <button onClick={handleFilter}>Filtrar</button>
-                    <button onClick={handleReset}>Resetear</button>
-                </div>
-            </div>
-            <div className="chart">
-                <Bar data={chartData} />
-            </div>
-            <div className="invoice-list">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Artículo/Servicio</th>
-                            <th>Precio Total</th>
-                            <th>Fecha de Emisión</th>
-                            <th>Categoría</th>
-                            <th>Subcategoría</th>
-                            <th>Proveedor</th>
-                            <th>Número de Factura</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredInvoices.map(inv => (
-                            <tr key={inv.id}>
-                                <td>{inv.id}</td>
-                                <td>{inv.itemName}</td>
-                                <td>{inv.totalPrice}</td>
-                                <td>{inv.issueDate}</td>
-                                <td>{inv.category}</td>
-                                <td>{inv.subcategory}</td>
-                                <td>{inv.vendor}</td>
-                                <td>{inv.invoiceNumber}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+        <div className="max-w-7xl mx-auto p-4 space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Visualizar Facturas</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Filtrar por Categoría" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="">Todas</SelectItem>
+                                {categories.map(cat => (
+                                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        <Select value={selectedVendor} onValueChange={setSelectedVendor}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Filtrar por Proveedor" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="">Todos</SelectItem>
+                                {vendors.map(vendor => (
+                                    <SelectItem key={vendor} value={vendor}>{vendor}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        <div className="flex space-x-2">
+                            <Button onClick={handleFilter} className="flex-1">
+                                Filtrar
+                            </Button>
+                            <Button onClick={handleReset} variant="outline" className="flex-1">
+                                Resetear
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div className="mb-8 h-80">
+                        <Bar
+                            data={chartData}
+                            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                        >
+                            <XAxis dataKey="category" />
+                            <YAxis />
+                            <Tooltip />
+                            <Legend />
+                            <Bar dataKey="total" fill="#3B82F6" />
+                        </Bar>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="bg-gray-100">
+                                    <th className="p-3 text-left">ID</th>
+                                    <th className="p-3 text-left">Artículo</th>
+                                    <th className="p-3 text-right">Precio Total</th>
+                                    <th className="p-3 text-left">Fecha</th>
+                                    <th className="p-3 text-left">Categoría</th>
+                                    <th className="p-3 text-left">Proveedor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredInvoices.map(inv => (
+                                    <tr key={inv.id} className="border-b hover:bg-gray-50">
+                                        <td className="p-3">{inv.id}</td>
+                                        <td className="p-3">{inv.itemName}</td>
+                                        <td className="p-3 text-right">
+                                            ${inv.totalPrice.toFixed(2)}
+                                        </td>
+                                        <td className="p-3">{new Date(inv.issueDate).toLocaleDateString()}</td>
+                                        <td className="p-3">{inv.category}</td>
+                                        <td className="p-3">{inv.vendor}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     );
 };
