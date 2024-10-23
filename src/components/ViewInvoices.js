@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { generateClient } from 'aws-amplify/api';
 import { listInvoices } from '../graphql/queries';
-import { Bar } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,7 +35,6 @@ const ViewInvoices = () => {
             setInvoices(invoicesList);
             setFilteredInvoices(invoicesList);
 
-            // Extraer categorías y vendors únicos
             const uniqueCategories = [...new Set(invoicesList.map(inv => inv.category))];
             const uniqueVendors = [...new Set(invoicesList.map(inv => inv.vendor))];
             
@@ -72,10 +71,11 @@ const ViewInvoices = () => {
 
     // Preparar datos para el gráfico
     const chartData = categories.map(cat => ({
-        category: cat,
+        name: cat,
         total: filteredInvoices
             .filter(inv => inv.category === cat)
-            .reduce((acc, curr) => acc + curr.totalPrice, 0)
+            .reduce((acc, curr) => acc + parseFloat(curr.totalPrice || 0), 0)
+            .toFixed(2)
     }));
 
     if (loading) {
@@ -136,17 +136,17 @@ const ViewInvoices = () => {
                         </div>
                     </div>
 
-                    <div className="mb-8 h-80">
-                        <Bar
-                            data={chartData}
-                            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                        >
-                            <XAxis dataKey="category" />
-                            <YAxis />
-                            <Tooltip />
-                            <Legend />
-                            <Bar dataKey="total" fill="#3B82F6" />
-                        </Bar>
+                    <div className="w-full h-80 mb-8">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={chartData}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="name" />
+                                <YAxis />
+                                <Tooltip />
+                                <Legend />
+                                <Bar dataKey="total" fill="#3B82F6" name="Total Gastos" />
+                            </BarChart>
+                        </ResponsiveContainer>
                     </div>
 
                     <div className="overflow-x-auto">
@@ -167,7 +167,7 @@ const ViewInvoices = () => {
                                         <td className="p-3">{inv.id}</td>
                                         <td className="p-3">{inv.itemName}</td>
                                         <td className="p-3 text-right">
-                                            ${inv.totalPrice.toFixed(2)}
+                                            ${parseFloat(inv.totalPrice || 0).toFixed(2)}
                                         </td>
                                         <td className="p-3">{new Date(inv.issueDate).toLocaleDateString()}</td>
                                         <td className="p-3">{inv.category}</td>
