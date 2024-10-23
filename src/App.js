@@ -6,10 +6,10 @@ import UploadInvoices from './components/UploadInvoices';
 import ViewInvoices from './components/ViewInvoices';
 import '@aws-amplify/ui-react/styles.css';
 import './App.css';
-import Amplify from 'aws-amplify';
-import awsconfig from './aws-exports'; // Asegúrate de que el archivo esté en el directorio correcto
+import { Amplify } from 'aws-amplify';
+import config from './aws-exports';
 
-Amplify.configure(awsconfig);
+Amplify.configure(config);
 
 
 const ProtectedRoute = ({ children }) => {
