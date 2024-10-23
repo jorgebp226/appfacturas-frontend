@@ -1,25 +1,28 @@
-import logo from './logo.svg';
+// src/App.js
+
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import UploadInvoices from './components/UploadInvoices';
+import ViewInvoices from './components/ViewInvoices';
 import './App.css';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+const App = () => {
+    return (
+        <Router>
+            <div className="app-container">
+                <nav>
+                    <ul>
+                        <li><Link to="/">Subir Facturas</Link></li>
+                        <li><Link to="/view">Visualizar Facturas</Link></li>
+                    </ul>
+                </nav>
+                <Routes>
+                    <Route path="/" element={<UploadInvoices />} />
+                    <Route path="/view" element={<ViewInvoices />} />
+                </Routes>
+            </div>
+        </Router>
+    );
+};
 
 export default App;

@@ -1,0 +1,49 @@
+/* src/styles/UploadInvoices.css */
+
+.upload-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.upload-container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.upload-section {
+    margin-bottom: 15px;
+}
+
+.upload-section label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.upload-section input {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:disabled {
+    background-color: #9E9E9E;
+    cursor: not-allowed;
+}
+
+.message {
+    margin-top: 15px;
+    text-align: center;
+    color: #d32f2f;
+}

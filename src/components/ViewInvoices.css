@@ -1,0 +1,79 @@
+/* src/styles/ViewInvoices.css */
+
+.view-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.view-container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.filters {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.filter {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter label {
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.filter select {
+    padding: 5px;
+}
+
+.filter-buttons {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.filter-buttons button {
+    margin-bottom: 5px;
+    padding: 8px 12px;
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.filter-buttons button:last-child {
+    background-color: #f44336;
+}
+
+.chart {
+    margin-bottom: 30px;
+}
+
+.invoice-list table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.invoice-list th, .invoice-list td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.invoice-list th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+.invoice-list tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.invoice-list tr:hover {
+    background-color: #ddd;
+}
