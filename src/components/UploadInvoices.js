@@ -1,7 +1,7 @@
 // src/components/UploadInvoices.js
 
 import React, { useState } from 'react';
-import { Storage } from 'aws-amplify';
+import { Storage } from '@aws-amplify/storage';
 import './UploadInvoices.css';
 
 const UploadInvoices = () => {
