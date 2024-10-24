@@ -66,7 +66,7 @@ const SquareDashboard = () => {
 
   const fetchLocations = async (token) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/square-data`, {
+      const response = await fetch(`https://4c5ekdhyy9.execute-api.eu-west-3.amazonaws.com/square/squareinfo`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
