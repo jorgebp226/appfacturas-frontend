@@ -88,3 +88,4 @@ const Sidebar = ({ onSignOut }) => {
     </div>
   );
 };
+export default Sidebar;
