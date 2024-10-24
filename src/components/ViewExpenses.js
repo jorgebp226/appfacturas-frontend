@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { generateClient } from 'aws-amplify/api';
 import { getCurrentUser } from 'aws-amplify/auth';
-import { listInvoices } from '../../graphql/queries';
+import { listInvoices } from '../graphql/queries';
 import { Search, Filter, Grid, List, MoreVertical } from 'lucide-react';
 import './ViewExpenses.css';
 
