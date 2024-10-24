@@ -1,156 +1,209 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import './Squarefirststep.css'; // Importar el archivo CSS
+import { getCurrentUser } from 'aws-amplify/auth';
+import { LineChart, XAxis, YAxis, Tooltip, Legend, Line, BarChart, Bar } from 'recharts';
+import './Squarefirststep.css';
 
-const DashboardPage = () => {
+const SquareDashboard = () => {
+  const [userSub, setUserSub] = useState(null);
   const [bearerToken, setBearerToken] = useState('');
   const [locations, setLocations] = useState([]);
-  const [selectedLocationId, setSelectedLocationId] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState('');
   const [orders, setOrders] = useState([]);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showBearerInput, setShowBearerInput] = useState(false);
 
-  // Obtener las ubicaciones desde la API de Square
-  const fetchLocations = async () => {
-    if (!bearerToken) {
-      setErrorMessage('Por favor, ingresa tu Bearer Token.');
-      return;
-    }
+  useEffect(() => {
+    initialize();
+  }, []);
 
-    const client = axios.create({
-      baseURL: 'https://connect.squareup.com/v2',
-      headers: {
-        'Authorization': `Bearer ${bearerToken}`,
-        'Square-Version': '2024-10-17',
-      }
-    });
-
+  const initialize = async () => {
     try {
-      const response = await client.get('/locations');
-      setLocations(response.data.locations);
-      setErrorMessage('');
+      const currentUser = await getCurrentUser();
+      const sub = currentUser.userId;
+      setUserSub(sub);
+      
+      // Intentar obtener el bearer token guardado
+      const response = await fetch(`https://4c5ekdhyy9.execute-api.eu-west-3.amazonaws.com/square/squarebearer?user_sub=${sub}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        setBearerToken(data.bearer_token);
+        await fetchLocations(data.bearer_token);
+      } else {
+        setShowBearerInput(true);
+      }
     } catch (error) {
-      setErrorMessage(`Error al obtener ubicaciones: ${error.message}`);
+      setError('Error initializing: ' + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Obtener los pedidos de una ubicación
-  const fetchOrders = async (locationId) => {
-    const client = axios.create({
-      baseURL: 'https://connect.squareup.com/v2',
-      headers: {
-        'Authorization': `Bearer ${bearerToken}`,
-        'Square-Version': '2024-10-17',
-        'Content-Type': 'application/json'
-      }
-    });
-
-    const body = {
-      location_ids: [locationId],
-      query: {
-        filter: {
-          date_time_filter: {
-            created_at: {
-              start_at: '2024-01-01T00:00:00Z',
-              end_at: '2024-12-31T23:59:59Z',
-            }
-          }
+  const saveBearerToken = async () => {
+    try {
+      const response = await fetch(`https://4c5ekdhyy9.execute-api.eu-west-3.amazonaws.com/square/squarebearer`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        sort: {
-          sort_field: 'CREATED_AT',
-          sort_order: 'DESC'
-        }
-      },
-      limit: 10
-    };
+        body: JSON.stringify({
+          user_sub: userSub,
+          bearer_token: bearerToken
+        })
+      });
 
-    try {
-      const response = await client.post('/orders/search', body);
-      setOrders(response.data.orders || []);
+      if (response.ok) {
+        setShowBearerInput(false);
+        await fetchLocations(bearerToken);
+      } else {
+        throw new Error('Failed to save bearer token');
+      }
     } catch (error) {
-      setErrorMessage(`Error al obtener pedidos: ${error.message}`);
+      setError('Error saving bearer token: ' + error.message);
     }
   };
 
-  // Manejar la selección de una ubicación
+  const fetchLocations = async (token) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/square-data`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bearer_token: token,
+          request_type: 'locations'
+        })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setLocations(data.locations);
+      } else {
+        throw new Error(data.error || 'Failed to fetch locations');
+      }
+    } catch (error) {
+      setError('Error fetching locations: ' + error.message);
+    }
+  };
+
+  const fetchOrders = async (locationId) => {
+    try {
+      const response = await fetch(`https://4c5ekdhyy9.execute-api.eu-west-3.amazonaws.com/square/squareinfo`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bearer_token: bearerToken,
+          request_type: 'orders',
+          location_id: locationId
+        })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setOrders(data.orders || []);
+      } else {
+        throw new Error(data.error || 'Failed to fetch orders');
+      }
+    } catch (error) {
+      setError('Error fetching orders: ' + error.message);
+    }
+  };
+
   const handleLocationChange = (e) => {
     const locationId = e.target.value;
-    setSelectedLocationId(locationId);
-    fetchOrders(locationId);
+    setSelectedLocation(locationId);
+    if (locationId) {
+      fetchOrders(locationId);
+    }
   };
+
+  // Función para procesar datos para gráficos
+  const processOrdersData = () => {
+    const dailyTotals = {};
+    orders.forEach(order => {
+      const date = new Date(order.created_at).toLocaleDateString();
+      const total = order.total_money.amount / 100;
+      dailyTotals[date] = (dailyTotals[date] || 0) + total;
+    });
+
+    return Object.entries(dailyTotals).map(([date, total]) => ({
+      date,
+      total
+    }));
+  };
+
+  if (loading) return <div className="loading">Cargando...</div>;
+  if (error) return <div className="error">{error}</div>;
 
   return (
     <div className="dashboard-container">
-      <h1 className="dashboard-title">Estadísticas de Pedidos de Square</h1>
-
-      <div className="bearer-input-container">
-        <input
-          type="text"
-          placeholder="Introduce tu Bearer Token"
-          value={bearerToken}
-          onChange={(e) => setBearerToken(e.target.value)}
-          className="bearer-input"
-        />
-        <button onClick={fetchLocations} className="bearer-button">Obtener Ubicaciones</button>
-      </div>
-
-      {errorMessage && <p className="error-message">{errorMessage}</p>}
-
-      {locations.length > 0 && (
-        <div className="location-container">
-          <label htmlFor="location-select">Selecciona una ubicación:</label>
-          <select
-            id="location-select"
-            onChange={handleLocationChange}
-            className="location-select"
-          >
-            <option value="">Selecciona una ubicación</option>
-            {locations.map((location) => (
-              <option key={location.id} value={location.id}>
-                {location.name} - {location.address.address_line_1}, {location.address.locality}
-              </option>
-            ))}
-          </select>
+      <h1>Square Dashboard</h1>
+      
+      {showBearerInput ? (
+        <div className="bearer-input-section">
+          <input
+            type="text"
+            value={bearerToken}
+            onChange={(e) => setBearerToken(e.target.value)}
+            placeholder="Introduce tu Bearer Token de Square"
+            className="bearer-input"
+          />
+          <button onClick={saveBearerToken} className="save-button">
+            Guardar Token
+          </button>
         </div>
-      )}
+      ) : (
+        <>
+          <div className="location-selector">
+            <select value={selectedLocation} onChange={handleLocationChange}>
+              <option value="">Selecciona una ubicación</option>
+              {locations.map(location => (
+                <option key={location.id} value={location.id}>
+                  {location.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      {orders.length > 0 && (
-        <div className="orders-container">
-          <h2>Pedidos recientes</h2>
-          {orders.map((order) => (
-            <div key={order.id} className="order-card">
-              <p><strong>ID del Pedido:</strong> {order.id}</p>
-              <p><strong>Fecha de Creación:</strong> {order.created_at}</p>
-              <div className="order-items">
-                <h3>Productos:</h3>
-                {order.line_items.map((item, index) => (
-                  <p key={index}>
-                    {item.name} - {item.base_price_money.amount / 100} {item.base_price_money.currency}
-                  </p>
-                ))}
+          {selectedLocation && orders.length > 0 && (
+            <div className="dashboard-stats">
+              <div className="stats-cards">
+                <div className="stat-card">
+                  <h3>Total de Ventas</h3>
+                  <p>€{orders.reduce((sum, order) => sum + (order.total_money.amount / 100), 0).toFixed(2)}</p>
+                </div>
+                <div className="stat-card">
+                  <h3>Número de Pedidos</h3>
+                  <p>{orders.length}</p>
+                </div>
+                <div className="stat-card">
+                  <h3>Ticket Medio</h3>
+                  <p>€{(orders.reduce((sum, order) => sum + (order.total_money.amount / 100), 0) / orders.length).toFixed(2)}</p>
+                </div>
+              </div>
+
+              <div className="charts">
+                <div className="chart-container">
+                  <h3>Ventas Diarias</h3>
+                  <LineChart width={600} height={300} data={processOrdersData()}>
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="total" stroke="#8884d8" />
+                  </LineChart>
+                </div>
               </div>
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
-
-      {/* Aquí puedes añadir gráficos o dashboards adicionales */}
-      <div className="dashboard-stats">
-        <h2>Estadísticas del día</h2>
-        <div className="stat-box">
-          <h3>Ingreso Total:</h3>
-          <p>{orders.reduce((sum, order) => sum + order.total_money.amount / 100, 0)} EUR</p>
-        </div>
-        <div className="stat-box">
-          <h3>Ticket Medio por Pedido:</h3>
-          <p>{(orders.reduce((sum, order) => sum + order.total_money.amount / 100, 0) / orders.length).toFixed(2)} EUR</p>
-        </div>
-        <div className="stat-box">
-          <h3>Pedidos Totales:</h3>
-          <p>{orders.length}</p>
-        </div>
-      </div>
     </div>
   );
 };
 
-export default DashboardPage;
+export default SquareDashboard;
