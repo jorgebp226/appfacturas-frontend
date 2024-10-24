@@ -121,7 +121,7 @@ const SquareDashboard = () => {
     }
   };
 
-  // Función para procesar datos para gráficos
+  // Process orders for total sales and average ticket
   const processOrdersData = () => {
     const dailyTotals = {};
     orders.forEach(order => {
@@ -134,6 +134,37 @@ const SquareDashboard = () => {
       date,
       total
     }));
+  };
+
+  // Process products ordered for histogram
+  const processProductOrders = () => {
+    const productOrders = {};
+    orders.forEach(order => {
+      order.line_items.forEach(item => {
+        const productName = item.name;
+        const quantity = parseInt(item.quantity);
+        productOrders[productName] = (productOrders[productName] || 0) + quantity;
+      });
+    });
+
+    return Object.entries(productOrders).map(([name, quantity]) => ({ name, quantity }));
+  };
+
+  // Process weekly revenue and product breakdown
+  const processWeeklyData = () => {
+    const weeklyData = {};
+    orders.forEach(order => {
+      const date = new Date(order.created_at).toLocaleDateString();
+      weeklyData[date] = weeklyData[date] || { date, products: {} };
+
+      order.line_items.forEach(item => {
+        const productName = item.name;
+        const total = item.total_money.amount / 100;
+        weeklyData[date].products[productName] = (weeklyData[date].products[productName] || 0) + total;
+      });
+    });
+
+    return Object.values(weeklyData);
   };
 
   if (loading) return <div className="loading">Cargando...</div>;
@@ -170,35 +201,53 @@ const SquareDashboard = () => {
           </div>
 
           {selectedLocation && orders.length > 0 && (
-            <div className="dashboard-stats">
-              <div className="stats-cards">
-                <div className="stat-card">
-                  <h3>Total de Ventas</h3>
-                  <p>€{orders.reduce((sum, order) => sum + (order.total_money.amount / 100), 0).toFixed(2)}</p>
+            <>
+              <div className="dashboard-stats">
+                <div className="stats-cards">
+                  <div className="stat-card">
+                    <i className="fas fa-receipt"></i>
+                    <h3>Total Orders</h3>
+                    <p>{orders.length}</p>
+                  </div>
+                  <div className="stat-card">
+                    <i className="fas fa-ticket-alt"></i>
+                    <h3>Average Ticket</h3>
+                    <p>€{(orders.reduce((sum, order) => sum + (order.total_money.amount / 100), 0) / orders.length).toFixed(2)}</p>
+                  </div>
+                  <div className="stat-card">
+                    <i className="fas fa-money-bill-wave"></i>
+                    <h3>Total Sales</h3>
+                    <p>€{orders.reduce((sum, order) => sum + (order.total_money.amount / 100), 0).toFixed(2)}</p>
+                  </div>
                 </div>
-                <div className="stat-card">
-                  <h3>Número de Pedidos</h3>
-                  <p>{orders.length}</p>
-                </div>
-                <div className="stat-card">
-                  <h3>Ticket Medio</h3>
-                  <p>€{(orders.reduce((sum, order) => sum + (order.total_money.amount / 100), 0) / orders.length).toFixed(2)}</p>
-                </div>
-              </div>
 
-              <div className="charts">
+                {/* Daily Histogram for Products */}
                 <div className="chart-container">
-                  <h3>Ventas Diarias</h3>
-                  <LineChart width={600} height={300} data={processOrdersData()}>
+                  <h3>Daily Product Sales</h3>
+                  <BarChart width={600} height={300} data={processProductOrders()}>
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="quantity" fill="#82ca9d" />
+                  </BarChart>
+                </div>
+
+                {/* Weekly Overview */}
+                <div className="chart-container">
+                  <h3>Weekly Revenue and Product Breakdown</h3>
+                  <BarChart width={600} height={300} data={processWeeklyData()}>
                     <XAxis dataKey="date" />
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Line type="monotone" dataKey="total" stroke="#8884d8" />
-                  </LineChart>
+                    {/* Assuming a utility function to generate random colors */}
+                    {Object.keys(processWeeklyData()[0].products).map((productName, index) => (
+                      <Bar key={index} dataKey={`products.${productName}`} stackId="a" fill="#82ca9d" />
+                    ))}
+                  </BarChart>
                 </div>
               </div>
-            </div>
+            </>
           )}
         </>
       )}
