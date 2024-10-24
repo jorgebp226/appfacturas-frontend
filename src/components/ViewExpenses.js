@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
+import { getCurrentUser } from 'aws-amplify/auth';
 import './ViewExpenses.css';
 
 const ViewExpenses = () => {
@@ -28,11 +29,10 @@ const ViewExpenses = () => {
     try {
       setLoading(true);
       
-      // Obtener el userSub desde el almacenamiento local, contexto, o de alguna otra manera si es necesario
-      // Aquí asumo que tienes una manera de obtener el userSub sin usar AWS Amplify
-      const userSub = '51f9008e-70f1-7059-c4ec-df32821f8589'; // Reemplaza esto con la forma correcta de obtener el userSub
+      // Obtener el usuario actual autenticado con la nueva API
+      const currentUser = await getCurrentUser();
+      const userSub = currentUser.userId;
 
-      // API Gateway endpoint sin autorización
       const response = await fetch(`https://01i2v9iqjl.execute-api.eu-west-3.amazonaws.com/Talky-Restaurant/invoices/${userSub}`, {
         method: 'GET',
         headers: {
@@ -57,16 +57,16 @@ const ViewExpenses = () => {
 
   const calculateStats = (data) => {
     const stats = data.reduce((acc, invoice) => {
-      acc.total += parseFloat(invoice.precio_total) || 0;
-      switch (invoice.categoría_del_gasto) {
+      acc.total += parseFloat(invoice['Precio total']) || 0;
+      switch (invoice['Categoría del gasto']) {
         case 'Alimentos':
-          acc.alimentos += parseFloat(invoice.precio_total) || 0;
+          acc.alimentos += parseFloat(invoice['Precio total']) || 0;
           break;
         case 'Servicios':
-          acc.servicios += parseFloat(invoice.precio_total) || 0;
+          acc.servicios += parseFloat(invoice['Precio total']) || 0;
           break;
         case 'Suministros':
-          acc.suministros += parseFloat(invoice.precio_total) || 0;
+          acc.suministros += parseFloat(invoice['Precio total']) || 0;
           break;
         default:
           break;
@@ -80,17 +80,17 @@ const ViewExpenses = () => {
   const filterInvoices = () => {
     return invoices.filter(invoice => {
       const matchesSearch = 
-        invoice.nombre_del_artículo_o_servicio.toLowerCase().includes(filters.search.toLowerCase()) ||
-        invoice.proveedor.toLowerCase().includes(filters.search.toLowerCase());
+        invoice['Nombre del artículo o servicio'].toLowerCase().includes(filters.search.toLowerCase()) ||
+        invoice['Proveedor'].toLowerCase().includes(filters.search.toLowerCase());
       
       const matchesCategory = filters.category === 'all' || 
-        invoice.categoría_del_gasto === filters.category;
+        invoice['Categoría del gasto'] === filters.category;
       
       const matchesSubcategory = filters.subcategory === 'all' || 
-        invoice.subcategoría_del_gasto === filters.subcategory;
+        invoice['Subcategoría del gasto'] === filters.subcategory;
         
       const matchesProveedor = filters.proveedor === 'all' || 
-        invoice.proveedor === filters.proveedor;
+        invoice['Proveedor'] === filters.proveedor;
 
       return matchesSearch && matchesCategory && matchesSubcategory && matchesProveedor;
     });
@@ -102,7 +102,7 @@ const ViewExpenses = () => {
   const filteredInvoices = filterInvoices();
 
   // Obtener proveedores únicos para el filtro
-  const uniqueProveedores = Array.from(new Set(invoices.map(invoice => invoice.proveedor)));
+  const uniqueProveedores = Array.from(new Set(invoices.map(invoice => invoice['Proveedor'])));
 
   return (
     <div className="expenses-container">
@@ -163,10 +163,8 @@ const ViewExpenses = () => {
               onChange={(e) => setFilters({...filters, subcategory: e.target.value})}
             >
               <option value="all">Todas</option>
-              {/* Aquí podrías agregar opciones dinámicamente basadas en la categoría seleccionada */}
-              {/* Ejemplo estático */}
-              <option value="Bebidas no alcohólicas">Bebidas no alcohólicas</option>
-              <option value="Bebidas alcohólicas">Bebidas alcohólicas</option>
+              <option value="Bebidas">Bebidas</option>
+              <option value="Carnes">Carnes</option>
               {/* Agrega más subcategorías según tus datos */}
             </select>
           </div>
@@ -212,15 +210,15 @@ const ViewExpenses = () => {
             <tbody>
               {filteredInvoices.map((invoice) => (
                 <tr key={invoice.id}>
-                  <td>{invoice.fecha_de_emisión}</td>
-                  <td>{invoice.nombre_del_artículo_o_servicio}</td>
-                  <td>{invoice.cantidad_de_unidades}</td>
-                  <td>{invoice.unidad_de_medida}</td>
-                  <td>${parseFloat(invoice.precio_por_unidad).toFixed(2)}</td>
-                  <td>${parseFloat(invoice.precio_total).toFixed(2)}</td>
-                  <td>{invoice.categoría_del_gasto}</td>
-                  <td>{invoice.subcategoría_del_gasto}</td>
-                  <td>{invoice.proveedor}</td>
+                  <td>{invoice['Fecha de emisión']}</td>
+                  <td>{invoice['Nombre del artículo o servicio']}</td>
+                  <td>{invoice['Cantidad de unidades']}</td>
+                  <td>{invoice['Unidad de medida']}</td>
+                  <td>${parseFloat(invoice['Precio por unidad']).toFixed(2)}</td>
+                  <td>${parseFloat(invoice['Precio total']).toFixed(2)}</td>
+                  <td>{invoice['Categoría del gasto']}</td>
+                  <td>{invoice['Subcategoría del gasto']}</td>
+                  <td>{invoice['Proveedor']}</td>
                 </tr>
               ))}
             </tbody>
