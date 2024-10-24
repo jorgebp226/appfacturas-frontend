@@ -13,3 +13,5 @@ const MainLayout = ({ children, onSignOut }) => {
     </div>
   );
 };
+
+export default MainLayout;
