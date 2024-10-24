@@ -110,19 +110,19 @@ const ViewExpenses = () => {
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-title">Total Gastos</div>
-          <div className="stat-value">${stats.total.toFixed(2)}</div>
+          <div className="stat-value">{stats.total.toFixed(2)}€</div>
         </div>
         <div className="stat-card">
           <div className="stat-title">Alimentos</div>
-          <div className="stat-value">${stats.alimentos.toFixed(2)}</div>
+          <div className="stat-value">{stats.alimentos.toFixed(2)}€</div>
         </div>
         <div className="stat-card">
           <div className="stat-title">Servicios</div>
-          <div className="stat-value">${stats.servicios.toFixed(2)}</div>
+          <div className="stat-value">{stats.servicios.toFixed(2)}€</div>
         </div>
         <div className="stat-card">
           <div className="stat-title">Suministros</div>
-          <div className="stat-value">${stats.suministros.toFixed(2)}</div>
+          <div className="stat-value">{stats.suministros.toFixed(2)}€</div>
         </div>
       </div>
 
@@ -214,8 +214,8 @@ const ViewExpenses = () => {
                   <td>{invoice['Nombre del artículo o servicio']}</td>
                   <td>{invoice['Cantidad de unidades']}</td>
                   <td>{invoice['Unidad de medida']}</td>
-                  <td>${parseFloat(invoice['Precio por unidad']).toFixed(2)}</td>
-                  <td>${parseFloat(invoice['Precio total']).toFixed(2)}</td>
+                  <td>{parseFloat(invoice['Precio por unidad']).toFixed(2)}€</td>
+                  <td>{parseFloat(invoice['Precio total']).toFixed(2)}€</td>
                   <td>{invoice['Categoría del gasto']}</td>
                   <td>{invoice['Subcategoría del gasto']}</td>
                   <td>{invoice['Proveedor']}</td>

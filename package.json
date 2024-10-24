@@ -5,14 +5,18 @@
   "dependencies": {
     "@aws-amplify/storage": "^6.6.11",
     "@aws-amplify/ui-react": "^6.5.5",
+    "@heroicons/react": "^2.1.5",
     "@mui/x-charts": "^7.21.0",
     "@radix-ui/react-alert-dialog": "^1.1.2",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "@tremor/react": "^3.18.3",
+    "autoprefixer": "^10.4.20",
     "aws-amplify": "^6.6.6",
     "chart.js": "^4.4.5",
     "lucide-react": "^0.453.0",
+    "postcss": "^8.4.47",
     "react": "^18.3.1",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.3.1",
@@ -20,6 +24,7 @@
     "react-router-dom": "^6.27.0",
     "react-scripts": "5.0.1",
     "recharts": "^2.13.0",
+    "tailwindcss": "^3.4.14",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
