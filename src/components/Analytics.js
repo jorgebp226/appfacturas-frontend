@@ -1,21 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, BarChart, Bar, Legend
 } from 'recharts';
 import { CurrencyEuroIcon, UsersIcon, ChartPieIcon, BuildingStorefrontIcon } from '@heroicons/react/24/outline';
 import { getCurrentUser } from 'aws-amplify/auth';
+import './Analytics.css';
 
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#FF4551'];
 
 const Analytics = () => {
   const [invoices, setInvoices] = useState([]);
@@ -71,13 +63,13 @@ const Analytics = () => {
   };
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="loading-screen">
       <div className="animate-pulse text-xl font-semibold">Cargando análisis...</div>
     </div>
   );
 
   if (error) return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="error-screen">
       <div className="text-red-600 text-xl font-semibold">{error}</div>
     </div>
   );
@@ -89,105 +81,82 @@ const Analytics = () => {
   ).toFixed(2);
 
   return (
-    <div className="bg-gray-50 min-h-screen p-8">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Dashboard Financiero</h1>
+    <div className="analytics-page">
+      <div className="container">
+        <h1 className="title">Dashboard Financiero</h1>
         
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="stats-grid">
           <StatsCard
             title="Gasto Total"
             value={`${totalGasto}€`}
-            icon={<CurrencyEuroIcon className="h-6 w-6" />}
+            icon={<CurrencyEuroIcon className="icon" />}
             trend="+12.3%"
           />
           <StatsCard
             title="Total Facturas"
             value={invoices.length}
-            icon={<UsersIcon className="h-6 w-6" />}
+            icon={<UsersIcon className="icon" />}
             trend="+4.5%"
           />
           <StatsCard
             title="Gasto Medio"
             value={`${(totalGasto / invoices.length).toFixed(2)}€`}
-            icon={<ChartPieIcon className="h-6 w-6" />}
+            icon={<ChartPieIcon className="icon" />}
             trend="+2.7%"
           />
           <StatsCard
             title="Proveedores"
             value={new Set(invoices.map(i => i.Proveedor)).size}
-            icon={<BuildingStorefrontIcon className="h-6 w-6" />}
+            icon={<BuildingStorefrontIcon className="icon" />}
             trend="+1.2%"
           />
         </div>
 
         {/* Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="charts-grid">
           {/* Monthly Expenses Chart */}
-          <div className="bg-white rounded-xl shadow-sm p-6 col-span-2">
-            <h2 className="text-lg font-semibold mb-4">Gastos Mensuales</h2>
-            <div className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis 
-                    dataKey="month" 
-                    stroke="#6b7280"
-                    tick={{ fill: '#6b7280' }}
-                  />
-                  <YAxis 
-                    stroke="#6b7280"
-                    tick={{ fill: '#6b7280' }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'white',
-                      border: 'none',
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                    }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="total" 
-                    stroke="#0088FE" 
-                    strokeWidth={3}
-                    dot={{ fill: '#0088FE', strokeWidth: 2 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+          <div className="chart-container">
+            <h2 className="chart-title">Gastos Mensuales</h2>
+            <ResponsiveContainer width="100%" height={400}>
+              <LineChart data={monthlyData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="month" stroke="#6b7280" tick={{ fill: '#6b7280' }} />
+                <YAxis stroke="#6b7280" tick={{ fill: '#6b7280' }} />
+                <Tooltip contentStyle={{ backgroundColor: 'white', borderRadius: '8px' }} />
+                <Line type="monotone" dataKey="total" stroke="#0088FE" strokeWidth={3} dot={{ fill: '#0088FE', strokeWidth: 2 }} />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
 
           {/* Category Distribution */}
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="text-lg font-semibold mb-4">Distribución por Categoría</h2>
-            <div className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={categoryData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={150}
-                    fill="#8884d8"
-                    dataKey="value"
-                    label={({ name, percent }) => 
-                      `${name} (${(percent * 100).toFixed(0)}%)`
-                    }
-                  >
-                    {categoryData.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+          <div className="chart-container">
+            <h2 className="chart-title">Distribución por Categoría</h2>
+            <ResponsiveContainer width="100%" height={400}>
+              <PieChart>
+                <Pie data={categoryData} cx="50%" cy="50%" outerRadius={150} fill="#8884d8" dataKey="value">
+                  {categoryData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Bar Chart for Proveedores */}
+          <div className="chart-container">
+            <h2 className="chart-title">Gastos por Proveedor</h2>
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart data={monthlyData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="month" stroke="#6b7280" tick={{ fill: '#6b7280' }} />
+                <YAxis stroke="#6b7280" tick={{ fill: '#6b7280' }} />
+                <Tooltip contentStyle={{ backgroundColor: 'white', borderRadius: '8px' }} />
+                <Bar dataKey="total" fill="#82ca9d" />
+                <Legend />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>
@@ -196,19 +165,17 @@ const Analytics = () => {
 };
 
 const StatsCard = ({ title, value, icon, trend }) => (
-  <div className="bg-white rounded-xl shadow-sm p-6">
-    <div className="flex items-center justify-between">
-      <div className="inline-flex items-center justify-center p-2 bg-blue-50 rounded-lg">
+  <div className="stats-card">
+    <div className="stats-header">
+      <div className="stats-icon-container">
         {icon}
       </div>
-      <span className={`text-sm font-medium ${
-        trend.startsWith('+') ? 'text-green-600' : 'text-red-600'
-      }`}>
+      <span className={`stats-trend ${trend.startsWith('+') ? 'positive' : 'negative'}`}>
         {trend}
       </span>
     </div>
-    <h3 className="mt-4 text-sm font-medium text-gray-500">{title}</h3>
-    <p className="mt-2 text-2xl font-bold text-gray-900">{value}</p>
+    <h3 className="stats-title">{title}</h3>
+    <p className="stats-value">{value}</p>
   </div>
 );
 
