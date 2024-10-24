@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Authenticator } from '@aws-amplify/ui-react';
-import { getCurrentUser, signOut } from 'aws-amplify/auth';
-import UploadInvoices from './components/UploadInvoices';
-import ViewInvoices from './components/ViewInvoices';
-import '@aws-amplify/ui-react/styles.css';
-import './App.css';
+import { getCurrentUser } from 'aws-amplify/auth';
 import { Amplify } from 'aws-amplify';
 import config from './aws-exports';
+import MainLayout from './components/Layout/MainLayout';
+import UploadInvoices from './components/UploadInvoices';
+import ViewExpenses from './components/ViewExpenses';
+import '@aws-amplify/ui-react/styles.css';
+import './App.css';
 
 Amplify.configure(config);
-
 
 const ProtectedRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -31,31 +31,12 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (isLoading) {
-    return <div>Cargando...</div>;
+    return <div className="flex h-screen items-center justify-center">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+    </div>;
   }
 
   return isAuthenticated ? children : <Navigate to="/login" />;
-};
-
-const NavigationBar = ({ onSignOut }) => {
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      onSignOut();
-    } catch (error) {
-      console.error('Error signing out: ', error);
-    }
-  };
-
-  return (
-    <nav className="p-4 bg-gray-800 text-white">
-      <ul className="flex space-x-4">
-        <li><Link to="/" className="hover:text-gray-300">Subir Facturas</Link></li>
-        <li><Link to="/view" className="hover:text-gray-300">Visualizar Facturas</Link></li>
-        <li><button onClick={handleSignOut} className="hover:text-gray-300">Cerrar Sesión</button></li>
-      </ul>
-    </nav>
-  );
 };
 
 const App = () => {
@@ -77,32 +58,30 @@ const App = () => {
   return (
     <Router>
       <Authenticator>
-        {({ user }) => (
-          <div className="min-h-screen bg-gray-100">
-            <Routes>
-              <Route path="/login" element={
-                authenticated ? <Navigate to="/" /> : <Authenticator />
-              } />
-              
-              <Route path="/" element={
-                <ProtectedRoute>
-                  <div className="app-container">
-                    <NavigationBar onSignOut={() => setAuthenticated(false)} />
-                    <UploadInvoices />
-                  </div>
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/view" element={
-                <ProtectedRoute>
-                  <div className="app-container">
-                    <NavigationBar onSignOut={() => setAuthenticated(false)} />
-                    <ViewInvoices />
-                  </div>
-                </ProtectedRoute>
-              } />
-            </Routes>
-          </div>
+        {({ signOut }) => (
+          <Routes>
+            <Route path="/login" element={
+              authenticated ? <Navigate to="/digitalizar" /> : <Authenticator />
+            } />
+            
+            <Route path="/digitalizar" element={
+              <ProtectedRoute>
+                <MainLayout onSignOut={() => setAuthenticated(false)}>
+                  <UploadInvoices />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/gastos" element={
+              <ProtectedRoute>
+                <MainLayout onSignOut={() => setAuthenticated(false)}>
+                  <ViewExpenses />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/" element={<Navigate to="/digitalizar" replace />} />
+          </Routes>
         )}
       </Authenticator>
     </Router>

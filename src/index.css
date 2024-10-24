@@ -11,3 +11,19 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.authenticator {
+  @apply mx-auto max-w-md;
+}
+
+.authenticator-header {
+  @apply text-center;
+}
+
+.amplify-button[data-variation='primary'] {
+  @apply bg-blue-600 hover:bg-blue-700;
+}
