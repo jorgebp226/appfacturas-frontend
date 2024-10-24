@@ -8,6 +8,9 @@ import MainLayout from './components/Layout/MainLayout';
 import UploadInvoices from './components/UploadInvoices';
 import Analytics from './components/Analytics';
 import ViewExpenses from './components/ViewExpenses';
+import SquareLoginButton from './components/Integrations/Square/SquareLoginButton';
+import SquareDashboard from './components/Integrations/Square/SquareDashboard';
+import Square from './components/Integrations/Square/Squarefirststep';
 import '@aws-amplify/ui-react/styles.css';
 import './App.css';
 
@@ -87,6 +90,33 @@ const App = () => {
                 </MainLayout>
               </ProtectedRoute>
             } />
+
+            <Route path="/square-integration" element={
+              <ProtectedRoute>
+                <MainLayout onSignOut={() => setAuthenticated(false)}>
+                  <SquareLoginButton />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/square-dashboard" element={
+              <ProtectedRoute>
+                <MainLayout onSignOut={() => setAuthenticated(false)}>
+                  <SquareDashboard />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+
+            
+            <Route path="/square" element={
+              <ProtectedRoute>
+                <MainLayout onSignOut={() => setAuthenticated(false)}>
+                  <Square />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+
+
 
             <Route path="/" element={<Navigate to="/digitalizar" replace />} />
           </Routes>

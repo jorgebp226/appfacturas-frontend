@@ -73,6 +73,12 @@ const Sidebar = ({ onSignOut }) => {
           label="Analytics"
           active={isActive('/analytics')}
         />
+        <SidebarItem 
+            to="/square" 
+            icon={BarChart2}
+            label="Square Dashboard"
+            active={isActive('/square')}
+          />
       </nav>
 
       {/* Sign Out Button */}
