@@ -110,3 +110,29 @@
     background-color: #007bff;
     color: white;
 }
+
+/* Legend Styles */
+.legend-container {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-right: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+}
+
+.legend-text {
+    font-size: 1rem;
+    color: #6b7280;
+}

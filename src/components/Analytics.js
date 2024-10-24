@@ -7,7 +7,7 @@ import { CurrencyEuroIcon, UsersIcon, ChartPieIcon, BuildingStorefrontIcon } fro
 import { getCurrentUser } from 'aws-amplify/auth';
 import './Analytics.css';
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#FF4551'];
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#FF4551', '#4caf50', '#e91e63', '#9c27b0'];
 
 const Analytics = () => {
   const [invoices, setInvoices] = useState([]);
@@ -33,22 +33,27 @@ const Analytics = () => {
     }
   };
 
-  // Función corregida para calcular los totales por mes a partir de las facturas
+  // Función para calcular los totales por mes a partir de las facturas
   const prepareMonthlyData = () => {
     const monthlyTotals = {};
     invoices.forEach(invoice => {
-      const date = new Date(invoice['Fecha de emisión']);  // Usamos la fecha de emisión
+      const date = new Date(invoice['Fecha de emisión']);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      monthlyTotals[monthKey] = (monthlyTotals[monthKey] || 0) + parseFloat(invoice['Precio total']);
+      const category = invoice['Categoría del gasto'];
+      if (!monthlyTotals[monthKey]) {
+        monthlyTotals[monthKey] = {};
+      }
+      monthlyTotals[monthKey][category] = (monthlyTotals[monthKey][category] || 0) + parseFloat(invoice['Precio total']);
     });
 
-    // Convertimos el objeto en un array de objetos con {month, total}
     return Object.entries(monthlyTotals)
-      .map(([month, total]) => ({
-        month,
-        total: Number(total.toFixed(2))
-      }))
-      .sort((a, b) => a.month.localeCompare(b.month));
+      .map(([month, categories]) => {
+        const entry = { month };
+        Object.entries(categories).forEach(([category, total]) => {
+          entry[category] = Number(total.toFixed(2));
+        });
+        return entry;
+      });
   };
 
   const prepareCategoryData = () => {
@@ -158,13 +163,16 @@ const Analytics = () => {
           <div className="chart-container">
             <h2 className="chart-title">Gastos Mensuales</h2>
             <ResponsiveContainer width="100%" height={400}>
-              <LineChart data={monthlyData}>
+              <BarChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="month" stroke="#6b7280" tick={{ fill: '#6b7280' }} />
                 <YAxis stroke="#6b7280" tick={{ fill: '#6b7280' }} />
                 <Tooltip contentStyle={{ backgroundColor: 'white', borderRadius: '8px' }} />
-                <Line type="monotone" dataKey="total" stroke="#0088FE" strokeWidth={3} dot={{ fill: '#0088FE', strokeWidth: 2 }} />
-              </LineChart>
+                {Object.keys(monthlyData[0] || {}).filter(k => k !== 'month').map((category, index) => (
+                  <Bar key={category} dataKey={category} stackId="a" fill={COLORS[index % COLORS.length]} />
+                ))}
+                <Legend />
+              </BarChart>
             </ResponsiveContainer>
           </div>
 
@@ -189,22 +197,18 @@ const Analytics = () => {
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
+
+            {/* Legend for Pie Chart */}
+            <div className="legend-container">
+              {activeData.map((entry, index) => (
+                <div key={`legend-${index}`} className="legend-item">
+                  <div className="legend-color" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                  <span className="legend-text">{entry.name}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Bar Chart for Proveedores */}
-          <div className="chart-container">
-            <h2 className="chart-title">Gastos por Proveedor</h2>
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" stroke="#6b7280" tick={{ fill: '#6b7280' }} />
-                <YAxis stroke="#6b7280" tick={{ fill: '#6b7280' }} />
-                <Tooltip contentStyle={{ backgroundColor: 'white', borderRadius: '8px' }} />
-                <Bar dataKey="total" fill="#82ca9d" />
-                <Legend />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
         </div>
       </div>
     </div>
