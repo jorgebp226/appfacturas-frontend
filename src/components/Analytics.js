@@ -33,6 +33,24 @@ const Analytics = () => {
     }
   };
 
+  // Función corregida para calcular los totales por mes a partir de las facturas
+  const prepareMonthlyData = () => {
+    const monthlyTotals = {};
+    invoices.forEach(invoice => {
+      const date = new Date(invoice['Fecha de emisión']);  // Usamos la fecha de emisión
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      monthlyTotals[monthKey] = (monthlyTotals[monthKey] || 0) + parseFloat(invoice['Precio total']);
+    });
+
+    // Convertimos el objeto en un array de objetos con {month, total}
+    return Object.entries(monthlyTotals)
+      .map(([month, total]) => ({
+        month,
+        total: Number(total.toFixed(2))
+      }))
+      .sort((a, b) => a.month.localeCompare(b.month));
+  };
+
   const prepareCategoryData = () => {
     const categoryTotals = {};
     invoices.forEach(invoice => {
