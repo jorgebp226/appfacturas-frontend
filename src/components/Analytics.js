@@ -13,6 +13,7 @@ const Analytics = () => {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('category'); // Estado para las pestañas
 
   useEffect(() => {
     fetchInvoices();
@@ -32,22 +33,6 @@ const Analytics = () => {
     }
   };
 
-  const prepareMonthlyData = () => {
-    const monthlyTotals = {};
-    invoices.forEach(invoice => {
-      const date = new Date(invoice['Fecha de emisión']);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      monthlyTotals[monthKey] = (monthlyTotals[monthKey] || 0) + parseFloat(invoice['Precio total']);
-    });
-
-    return Object.entries(monthlyTotals)
-      .map(([month, total]) => ({
-        month,
-        total: Number(total.toFixed(2))
-      }))
-      .sort((a, b) => a.month.localeCompare(b.month));
-  };
-
   const prepareCategoryData = () => {
     const categoryTotals = {};
     invoices.forEach(invoice => {
@@ -58,7 +43,38 @@ const Analytics = () => {
     return Object.entries(categoryTotals)
       .map(([name, value]) => ({
         name,
-        value: Number(value.toFixed(2))
+        value: Number(value.toFixed(2)),
+        percentage: ((value / totalGasto) * 100).toFixed(2)
+      }));
+  };
+
+  const prepareSubcategoryData = () => {
+    const subcategoryTotals = {};
+    invoices.forEach(invoice => {
+      const subcategory = invoice['Subcategoría del gasto'];
+      subcategoryTotals[subcategory] = (subcategoryTotals[subcategory] || 0) + parseFloat(invoice['Precio total']);
+    });
+
+    return Object.entries(subcategoryTotals)
+      .map(([name, value]) => ({
+        name,
+        value: Number(value.toFixed(2)),
+        percentage: ((value / totalGasto) * 100).toFixed(2)
+      }));
+  };
+
+  const prepareProviderData = () => {
+    const providerTotals = {};
+    invoices.forEach(invoice => {
+      const provider = invoice['Proveedor'];
+      providerTotals[provider] = (providerTotals[provider] || 0) + parseFloat(invoice['Precio total']);
+    });
+
+    return Object.entries(providerTotals)
+      .map(([name, value]) => ({
+        name,
+        value: Number(value.toFixed(2)),
+        percentage: ((value / totalGasto) * 100).toFixed(2)
       }));
   };
 
@@ -74,17 +90,21 @@ const Analytics = () => {
     </div>
   );
 
-  const monthlyData = prepareMonthlyData();
-  const categoryData = prepareCategoryData();
   const totalGasto = invoices.reduce((sum, invoice) => 
     sum + parseFloat(invoice['Precio total']), 0
   ).toFixed(2);
+
+  const monthlyData = prepareMonthlyData();
+  const categoryData = prepareCategoryData();
+  const subcategoryData = prepareSubcategoryData();
+  const providerData = prepareProviderData();
+  const activeData = activeTab === 'category' ? categoryData : activeTab === 'subcategory' ? subcategoryData : providerData;
 
   return (
     <div className="analytics-page">
       <div className="container">
         <h1 className="title">Dashboard Financiero</h1>
-        
+
         {/* Stats Cards */}
         <div className="stats-grid">
           <StatsCard
@@ -115,6 +135,7 @@ const Analytics = () => {
 
         {/* Charts Grid */}
         <div className="charts-grid">
+          
           {/* Monthly Expenses Chart */}
           <div className="chart-container">
             <h2 className="chart-title">Gastos Mensuales</h2>
@@ -129,13 +150,21 @@ const Analytics = () => {
             </ResponsiveContainer>
           </div>
 
-          {/* Category Distribution */}
+          {/* Pie Chart Section */}
           <div className="chart-container">
             <h2 className="chart-title">Distribución por Categoría</h2>
+            
+            {/* Tabs for Category, Subcategory, Provider */}
+            <div className="tabs">
+              <button className={`tab ${activeTab === 'category' ? 'active' : ''}`} onClick={() => setActiveTab('category')}>Categoría</button>
+              <button className={`tab ${activeTab === 'subcategory' ? 'active' : ''}`} onClick={() => setActiveTab('subcategory')}>Subcategoría</button>
+              <button className={`tab ${activeTab === 'provider' ? 'active' : ''}`} onClick={() => setActiveTab('provider')}>Proveedor</button>
+            </div>
+
             <ResponsiveContainer width="100%" height={400}>
               <PieChart>
-                <Pie data={categoryData} cx="50%" cy="50%" outerRadius={150} fill="#8884d8" dataKey="value">
-                  {categoryData.map((entry, index) => (
+                <Pie data={activeData} cx="50%" cy="50%" outerRadius={150} dataKey="value" label={(entry) => `${entry.value}€ (${entry.percentage}%)`}>
+                  {activeData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
