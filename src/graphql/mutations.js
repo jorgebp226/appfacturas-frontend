@@ -18,6 +18,11 @@ export const createInvoice = /* GraphQL */ `
       uploadDate
       fileType
       originalFile
+      status
+      userId
+      balanceDue
+      dueDate
+      associatedProject
       createdAt
       updatedAt
       _version
@@ -44,6 +49,11 @@ export const updateInvoice = /* GraphQL */ `
       uploadDate
       fileType
       originalFile
+      status
+      userId
+      balanceDue
+      dueDate
+      associatedProject
       createdAt
       updatedAt
       _version
@@ -70,6 +80,11 @@ export const deleteInvoice = /* GraphQL */ `
       uploadDate
       fileType
       originalFile
+      status
+      userId
+      balanceDue
+      dueDate
+      associatedProject
       createdAt
       updatedAt
       _version

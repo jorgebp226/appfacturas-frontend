@@ -2,8 +2,11 @@
 // this is an auto generated file. This will be overwritten
 
 export const onCreateInvoice = /* GraphQL */ `
-  subscription OnCreateInvoice($filter: ModelSubscriptionInvoiceFilterInput) {
-    onCreateInvoice(filter: $filter) {
+  subscription OnCreateInvoice(
+    $filter: ModelSubscriptionInvoiceFilterInput
+    $userId: String
+  ) {
+    onCreateInvoice(filter: $filter, userId: $userId) {
       id
       itemName
       totalPrice
@@ -15,6 +18,11 @@ export const onCreateInvoice = /* GraphQL */ `
       uploadDate
       fileType
       originalFile
+      status
+      userId
+      balanceDue
+      dueDate
+      associatedProject
       createdAt
       updatedAt
       _version
@@ -25,8 +33,11 @@ export const onCreateInvoice = /* GraphQL */ `
   }
 `;
 export const onUpdateInvoice = /* GraphQL */ `
-  subscription OnUpdateInvoice($filter: ModelSubscriptionInvoiceFilterInput) {
-    onUpdateInvoice(filter: $filter) {
+  subscription OnUpdateInvoice(
+    $filter: ModelSubscriptionInvoiceFilterInput
+    $userId: String
+  ) {
+    onUpdateInvoice(filter: $filter, userId: $userId) {
       id
       itemName
       totalPrice
@@ -38,6 +49,11 @@ export const onUpdateInvoice = /* GraphQL */ `
       uploadDate
       fileType
       originalFile
+      status
+      userId
+      balanceDue
+      dueDate
+      associatedProject
       createdAt
       updatedAt
       _version
@@ -48,8 +64,11 @@ export const onUpdateInvoice = /* GraphQL */ `
   }
 `;
 export const onDeleteInvoice = /* GraphQL */ `
-  subscription OnDeleteInvoice($filter: ModelSubscriptionInvoiceFilterInput) {
-    onDeleteInvoice(filter: $filter) {
+  subscription OnDeleteInvoice(
+    $filter: ModelSubscriptionInvoiceFilterInput
+    $userId: String
+  ) {
+    onDeleteInvoice(filter: $filter, userId: $userId) {
       id
       itemName
       totalPrice
@@ -61,6 +80,11 @@ export const onDeleteInvoice = /* GraphQL */ `
       uploadDate
       fileType
       originalFile
+      status
+      userId
+      balanceDue
+      dueDate
+      associatedProject
       createdAt
       updatedAt
       _version

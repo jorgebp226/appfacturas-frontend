@@ -15,6 +15,11 @@ export const getInvoice = /* GraphQL */ `
       uploadDate
       fileType
       originalFile
+      status
+      userId
+      balanceDue
+      dueDate
+      associatedProject
       createdAt
       updatedAt
       _version
@@ -43,6 +48,11 @@ export const listInvoices = /* GraphQL */ `
         uploadDate
         fileType
         originalFile
+        status
+        userId
+        balanceDue
+        dueDate
+        associatedProject
         createdAt
         updatedAt
         _version
@@ -81,6 +91,56 @@ export const syncInvoices = /* GraphQL */ `
         uploadDate
         fileType
         originalFile
+        status
+        userId
+        balanceDue
+        dueDate
+        associatedProject
+        createdAt
+        updatedAt
+        _version
+        _deleted
+        _lastChangedAt
+        __typename
+      }
+      nextToken
+      startedAt
+      __typename
+    }
+  }
+`;
+export const invoicesByUserId = /* GraphQL */ `
+  query InvoicesByUserId(
+    $userId: String!
+    $sortDirection: ModelSortDirection
+    $filter: ModelInvoiceFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    invoicesByUserId(
+      userId: $userId
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        itemName
+        totalPrice
+        issueDate
+        category
+        subcategory
+        vendor
+        invoiceNumber
+        uploadDate
+        fileType
+        originalFile
+        status
+        userId
+        balanceDue
+        dueDate
+        associatedProject
         createdAt
         updatedAt
         _version
