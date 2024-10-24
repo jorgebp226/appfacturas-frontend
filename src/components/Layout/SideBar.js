@@ -43,7 +43,7 @@ const Sidebar = ({ onSignOut }) => {
       <div className="flex h-16 items-center px-6">
         <div className="flex items-center space-x-2">
           <LayoutDashboard className="h-8 w-8 text-white" />
-          <span className="text-xl font-bold text-white">KITCHEN ERP</span>
+          <span className="text-xl font-bold text-white">Talky Serve</span>
         </div>
       </div>
 
