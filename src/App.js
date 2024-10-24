@@ -6,6 +6,7 @@ import { Amplify } from 'aws-amplify';
 import config from './aws-exports';
 import MainLayout from './components/Layout/MainLayout';
 import UploadInvoices from './components/UploadInvoices';
+import Analytics from './components/Analytics';
 import ViewExpenses from './components/ViewExpenses';
 import '@aws-amplify/ui-react/styles.css';
 import './App.css';
@@ -71,7 +72,14 @@ const App = () => {
                 </MainLayout>
               </ProtectedRoute>
             } />
-            
+                        
+                        <Route path="/analytics" element={
+              <ProtectedRoute>
+                <MainLayout onSignOut={() => setAuthenticated(false)}>
+                  <Analytics />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
             <Route path="/gastos" element={
               <ProtectedRoute>
                 <MainLayout onSignOut={() => setAuthenticated(false)}>
